@@ -25,7 +25,7 @@ SECRET_KEY = 'eny6)!#fs9ij&_jg)=(k*+1#2@$i%=rfvv(p@o9v&(u+0afevv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = ["127.0.0.1", "0.0.0.0", "localhost", "testserver"]
 
 
 # Application definition
