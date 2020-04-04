@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import Question
+from .models import Question, Choice
 
 
 class QuestionModelTest(TestCase):
@@ -33,17 +33,38 @@ class QuestionModelTest(TestCase):
         self.assertIs(recent_question.was_published_recently(), True)
 
 
-def create_question(Question_text, days):
+def create_question_without_choice(question_text, days):
     time = timezone.now() + datetime.timedelta(days=days)
-    return Question.object.create(Question_text=Question_textm, pub_date=time)
+    return Question.objects.create(question_text=question_text, pub_date=time)
+
+def create_choice(question, choice_text, votes=0):
+    return Choice.objects.create(question=question, choice_text=choice_text, votes=votes)
+
+def create_question(question_text, days):
+    time = timezone.now() + datetime.timedelta(days=days)
+    question = Question.objects.create(question_text=question_text, pub_date=time)
+    create_choice(question, 'test choice')
+    return question
 
 
 class QuestionIndexViewTexts(TestCase):
     def test_no_question(self):
         response = self.client.get(reverse('polls:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No polls are avaliable.")
+        self.assertContains(response, "No polls are available.")
         self.assertQuerysetEqual(response.context['latest_question_list'], [])
+
+    def test_question_without_choice(self):
+        for i in range(5):
+            if i < 3:
+                question = create_question_without_choice(question_text="question{} with choice".format(i), days=-i)
+                choice = create_choice(question, 'choice1')
+                choice = create_choice(question, 'choice2')
+            else:
+                question = create_question_without_choice(question_text="question{} without choice".format(i), days=-i)
+
+        response = self.client.get(reverse('polls:index'))
+        self.assertContains(response, 'without choice', False)
 
     def test_past_question(self):
         """
@@ -84,7 +105,7 @@ class QuestionIndexViewTexts(TestCase):
         """
         The questions index page may display multiple questions.
         """
-        create_question(question_text="Past question 1.", days=-30)
+        create_question(question_text="Past question 1.", days=-13)
         create_question(question_text="Past question 2.", days=-5)
         response = self.client.get(reverse('polls:index'))
         self.assertQuerysetEqual(
